@@ -761,5 +761,49 @@ class FloatingWindowTests(unittest.TestCase):
         hotkeys.stop()
 
 
+class RuntimePathTests(unittest.TestCase):
+    def test_data_dir_honors_environment_override(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.dict(main.os.environ, {"FLOATINGWORDBALL_DATA_DIR": directory}):
+                self.assertEqual(main.default_data_dir().resolve(), Path(directory).resolve())
+
+    def test_prepare_data_dir_migrates_legacy_files_without_overwrite(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            legacy, destination = root / "legacy", root / "data"
+            legacy.mkdir()
+            destination.mkdir()
+            (legacy / "config.json").write_text('{"theme": "blue"}', encoding="utf-8")
+            (legacy / "wordbooks.json").write_text('{"books": {}}', encoding="utf-8")
+            (legacy / "details_cache.json").write_text('{"entries": {}}', encoding="utf-8")
+            (destination / "config.json").write_text('{"theme": "amber"}', encoding="utf-8")
+            main.prepare_data_dir(destination, legacy)
+            self.assertEqual(json.loads((destination / "config.json").read_text("utf-8"))["theme"],
+                             "amber")
+            self.assertTrue((destination / "wordbooks.json").is_file())
+            self.assertTrue((destination / "details_cache.json").is_file())
+
+    def test_prepare_vocab_dir_copies_bundled_vocab_and_fills_missing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundled, destination = root / "bundled", root / "data"
+            bundled.mkdir()
+            (bundled / "CET4.json").write_text(
+                json.dumps([{"word": "harbor", "translation": "n. 港口"}]), encoding="utf-8")
+            vocab_dir = main.prepare_vocab_dir(destination, bundled)
+            self.assertEqual(load_vocab(vocab_dir / "CET4.json")[0]["word"], "harbor")
+            for name in main.VOCABULARIES:
+                self.assertTrue((vocab_dir / f"{name}.json").is_file())
+
+    def test_corrupt_config_falls_back_to_defaults(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            path.write_text("{not valid json", encoding="utf-8")
+            config = main.load_config(path)
+            self.assertEqual(config["theme"], "green")
+            self.assertEqual(config["vocabulary"], "CET4")
+            self.assertEqual(config["scale"], 1.0)
+
+
 if __name__ == "__main__":
     unittest.main()

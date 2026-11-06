@@ -1,0 +1,7 @@
+build/
+dist/
+stage/
+tools/
+artifacts/
+*.spec
+__pycache__/

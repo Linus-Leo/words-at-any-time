@@ -12,6 +12,7 @@ import math
 import os
 import random
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -48,10 +49,14 @@ from vocab_fetcher import (
     VOCABULARIES, ensure_local_vocab, load_vocab, write_json_atomic,
 )
 
+APP_NAME = "FloatingWordBall"
+APP_VERSION = "1.0.0"
 BASE_DIR = Path(__file__).resolve().parent
+RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", BASE_DIR))
 CONFIG_PATH = BASE_DIR / "config.json"
 VOCAB_DIR = BASE_DIR / "vocab"
-IMPORTANCE_PATH = BASE_DIR / "importance.json"
+BUNDLED_VOCAB_DIR = RESOURCE_DIR / "vocab"
+IMPORTANCE_PATH = RESOURCE_DIR / "importance.json"
 MIN_SCALE, MAX_SCALE = 0.6, 2.5
 MIN_CAPSULE_WIDTH = 252
 SNAP_DISTANCE = 26
@@ -100,6 +105,87 @@ DEFAULTS = {
     },
 }
 LOGGER = logging.getLogger("FloatingWordBall")
+
+
+def _is_frozen() -> bool:
+    return bool(getattr(sys, "frozen", False))
+
+
+def default_data_dir(portable: bool = False) -> Path:
+    """Return a writable directory without ever pointing at Program Files.
+
+    A packaged portable build keeps everything beside the EXE; an installed
+    build uses %APPDATA%\\FloatingWordBall. Source runs keep the historical
+    repository-local files so existing developer data is untouched.
+    """
+    override = os.environ.get("FLOATINGWORDBALL_DATA_DIR")
+    if override:
+        return Path(override).expanduser().resolve()
+    if _is_frozen():
+        executable_dir = Path(sys.executable).resolve().parent
+        if portable or (executable_dir / "portable.flag").is_file():
+            return executable_dir
+        appdata = os.environ.get("APPDATA") or str(Path.home() / "AppData" / "Roaming")
+        return Path(appdata) / APP_NAME
+    return BASE_DIR
+
+
+def prepare_data_dir(data_dir: Path, legacy_dir: Path | None = None) -> Path:
+    """Create the user-data directory and migrate legacy files once."""
+    destination = Path(data_dir).expanduser().resolve()
+    destination.mkdir(parents=True, exist_ok=True)
+    if legacy_dir is not None:
+        source_dir = Path(legacy_dir).expanduser().resolve()
+        for name in ("config.json", "wordbooks.json", "details_cache.json"):
+            source, target = source_dir / name, destination / name
+            if source == target or not source.is_file() or target.exists():
+                continue
+            try:
+                shutil.copy2(source, target)
+                LOGGER.info("Migrated legacy %s to %s", name, destination)
+            except OSError as exc:
+                LOGGER.warning("Could not migrate legacy %s: %s", name, exc)
+    return destination
+
+
+def prepare_vocab_dir(data_dir: Path, bundled_vocab_dir: Path | None = None) -> Path:
+    """Use a writable vocabulary copy, seeded from packaged read-only data."""
+    destination = Path(data_dir) / "vocab"
+    destination.mkdir(parents=True, exist_ok=True)
+    source_dir = Path(bundled_vocab_dir or BUNDLED_VOCAB_DIR)
+    for name in VOCABULARIES:
+        source, target = source_dir / f"{name}.json", destination / f"{name}.json"
+        if not target.is_file() and source.is_file():
+            try:
+                shutil.copy2(source, target)
+            except OSError as exc:
+                LOGGER.warning("Could not copy bundled vocabulary %s: %s", name, exc)
+    ensure_local_vocab(destination)
+    return destination
+
+
+def configure_logging(data_dir: Path) -> Path:
+    """Log to the writable data directory so windowed failures are diagnosable."""
+    log_path = Path(data_dir) / "FloatingWordBall.log"
+    handlers: list[logging.Handler] = []
+    try:
+        handlers.append(logging.FileHandler(log_path, encoding="utf-8"))
+    except OSError as exc:
+        log_path = Path(tempfile.gettempdir()) / "FloatingWordBall.log"
+        try:
+            handlers.append(logging.FileHandler(log_path, encoding="utf-8"))
+        except OSError:
+            pass
+        LOGGER.warning("Could not open the preferred log file: %s", exc)
+    if not _is_frozen():
+        handlers.append(logging.StreamHandler())
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s: %(message)s",
+        handlers=handlers or None,
+        force=True,
+    )
+    return log_path
 
 
 def theme_palette(name: str) -> dict:
@@ -1230,6 +1316,7 @@ class WordbookDialog(QDialog):
                                    | QDialogButtonBox.StandardButton.Cancel)
         ok = buttons.button(QDialogButtonBox.StandardButton.Ok)
         ok.setText("开始循环")
+        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
         buttons.accepted.connect(self._accept)
         buttons.rejected.connect(self.reject)
         outer.addWidget(buttons)
@@ -1451,6 +1538,7 @@ class StudyCalendarDialog(QDialog):
         outer.addWidget(self.day_detail)
 
         close = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        close.button(QDialogButtonBox.StandardButton.Close).setText("关闭")
         close.rejected.connect(self.reject)
         outer.addWidget(close)
         self.calendar.selectionChanged.connect(self._show_day)
@@ -1589,6 +1677,7 @@ class MyWordbooksDialog(QDialog):
         footer.addWidget(self.start_button)
         footer.addStretch(1)
         close = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        close.button(QDialogButtonBox.StandardButton.Close).setText("关闭")
         close.rejected.connect(self.reject)
         footer.addWidget(close)
         outer.addLayout(footer)
@@ -1826,12 +1915,13 @@ class FloatingWindow(QWidget):
             self._save()
 
     def _load_vocab(self, name: str):
-        ensure_local_vocab(self.vocab_dir)
         path = self.vocab_dir / f"{name}.json"
         try:
+            ensure_local_vocab(self.vocab_dir)
             self.entries = load_vocab(path)
         except (OSError, ValueError) as exc:
-            raise RuntimeError(f"词库 {name} 无法读取：{exc}") from exc
+            raise RuntimeError(
+                f"词库 {name} 无法读取：{exc}\n词库目录：{self.vocab_dir}") from exc
         self.config["vocabulary"] = name
         self.vocab_action.setText(f"{name} · {len(self.entries)} 词")
         for key, action in self.vocab_actions.items():
@@ -2963,22 +3053,44 @@ class FloatingWindow(QWidget):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="桌面悬浮背单词工具")
     parser.add_argument("--offline-init", action="store_true", help="启动前用内置词库补齐缺失文件")
-    parser.add_argument("--config", type=Path, default=CONFIG_PATH)
-    parser.add_argument("--vocab-dir", type=Path, default=VOCAB_DIR)
+    parser.add_argument("--data-dir", type=Path, default=None,
+                        help="用户数据目录（默认安装版为 AppData，便携版为 EXE 所在目录）")
+    parser.add_argument("--portable", action="store_true", help="强制使用便携模式（数据写在 EXE 旁）")
+    parser.add_argument("--config", type=Path, default=None, help="指定 config.json 路径")
+    parser.add_argument("--vocab-dir", type=Path, default=None, help="指定词库目录")
+    parser.add_argument("--version", action="version", version=f"{APP_NAME} {APP_VERSION}")
     args = parser.parse_args(argv)
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     app = QApplication(sys.argv[:1])
-    app.setApplicationName("FloatingWordBall")
+    app.setApplicationName(APP_NAME)
+    app.setApplicationVersion(APP_VERSION)
     app.setQuitOnLastWindowClosed(False)
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-    config = load_config(args.config)
-    app.setWindowIcon(app_icon(theme_palette(config["theme"])))
-    ensure_local_vocab(args.vocab_dir)
+    data_dir = None
+    log_path = None
     try:
-        window = FloatingWindow(config, args.vocab_dir, args.config)
-    except RuntimeError as exc:
-        QMessageBox.critical(None, "FloatingWordBall 无法启动", str(exc))
+        legacy_dir = (Path(sys.executable).resolve().parent
+                      if _is_frozen() and not args.portable else None)
+        data_dir = prepare_data_dir(
+            args.data_dir or default_data_dir(args.portable), legacy_dir=legacy_dir)
+        log_path = configure_logging(data_dir)
+        config_path = args.config.expanduser() if args.config else data_dir / "config.json"
+        if args.vocab_dir:
+            vocab_dir = args.vocab_dir.expanduser()
+            ensure_local_vocab(vocab_dir)
+        else:
+            vocab_dir = prepare_vocab_dir(data_dir)
+        config = load_config(config_path)
+        app.setWindowIcon(app_icon(theme_palette(config["theme"])))
+        window = FloatingWindow(config, vocab_dir, config_path)
+    except (OSError, RuntimeError) as exc:
+        LOGGER.exception("FloatingWordBall startup failed")
+        QMessageBox.critical(
+            None, "FloatingWordBall 无法启动",
+            f"无法初始化 FloatingWordBall。\n\n{exc}\n\n"
+            f"数据目录：{data_dir if data_dir is not None else '未创建'}\n"
+            f"日志：{log_path if log_path is not None else '不可用'}\n\n"
+            "便携版请解压到有写入权限的文件夹后重新运行。")
         return 1
     app.aboutToQuit.connect(window.quit)
     window.start()

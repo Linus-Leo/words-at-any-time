@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FloatingWordBall · 常驻桌面的悬浮背单词工具</title>
+<meta name="description" content="FloatingWordBall 把今天要背的单词收进一颗桌面悬浮胶囊：悬停展开释义，点一下就评级换词。内置 CET4 / CET6 / 考研 / TOEFL 词库，本地可用，提供 Windows 安装版与便携版。">
+<meta name="theme-color" content="#0C211F">
+<meta property="og:type" content="website">
+<meta property="og:title" content="FloatingWordBall · 常驻桌面的悬浮背单词工具">
+<meta property="og:description" content="一颗安静的桌面胶囊，随手背单词。Windows 安装版 / 便携版下载。">
+<meta property="og:url" content="https://github.com/Linus-Leo/words-at-any-time">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173B38'/%3E%3Crect x='12' y='22' width='40' height='20' rx='10' fill='%23D6F56D'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top" aria-label="FloatingWordBall 首页">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">FloatingWordBall<span class="brand-cn">单词悬浮球</span></span>
+    </a>
+    <nav class="nav" aria-label="主导航">
+      <a href="#how">怎么用</a>
+      <a href="#features">功能</a>
+      <a href="#guide">安装</a>
+      <a href="#shortcuts">快捷键</a>
+      <a href="#faq">常见问题</a>
+    </nav>
+    <div class="header-cta">
+      <a class="ghlink" href="https://github.com/Linus-Leo/words-at-any-time" target="_blank" rel="noopener" aria-label="GitHub 仓库">
+        <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      </a>
+      <a class="btn btn-primary btn-sm" href="#download">下载</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <a id="top"></a>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1>单词，<br>就待在桌面一角。</h1>
+        <p class="lede">把今天要背的词收进一颗悬浮胶囊：鼠标移上去展开释义，点一下就评级换词。它安静地待在屏幕边上，需要时随手可及。</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#download">
+            下载 Windows 版
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 15.5h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#how">看看怎么用</a>
+        </div>
+        <p class="hero-meta">Windows 10 / 11　·　安装版与便携版　·　无需另装 Python</p>
+      </div>
+
+      <div class="hero-stage">
+        <div class="desk" aria-hidden="false">
+          <div class="desk-glow" aria-hidden="true"></div>
+          <div class="desk-window" aria-hidden="true"></div>
+          <div class="capsule open pinned" id="capsule" data-theme="green" role="group" aria-label="FloatingWordBall 界面演示，可交互">
+            <button class="cap-head" id="capHead" type="button" aria-label="固定或取消固定释义">
+              <span class="cap-word" id="capWord">serendipity</span>
+              <span class="cap-stars" id="capStars" aria-label="词频重要度三星"></span>
+            </button>
+            <div class="cap-body" id="capBody">
+              <p class="cap-def" id="capDef">n. 意外发现美好事物的运气；机缘巧合</p>
+              <p class="cap-note" id="capNote">有道补充 · 已缓存在本地</p>
+              <div class="cap-actions">
+                <button class="rate known" data-rate="known" type="button">认识</button>
+                <button class="rate fuzzy" data-rate="fuzzy" type="button">模糊</button>
+                <button class="rate unknown" data-rate="unknown" type="button">不认识</button>
+                <button class="cap-plus" type="button" aria-label="加入我的单词本">＋</button>
+              </div>
+            </div>
+            <button class="cap-speaker" type="button" aria-label="播放发音">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/><path d="M16 8.5a4 4 0 0 1 0 7M18.5 6a7 7 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <div class="theme-switch" role="group" aria-label="切换配色主题">
+            <button class="swatch" data-theme="green" style="--sw:#173B38;--swdot:#D6F56D" aria-label="青绿" aria-pressed="true"></button>
+            <button class="swatch" data-theme="blue" style="--sw:#163B57;--swdot:#7DD3FC" aria-label="湖蓝" aria-pressed="false"></button>
+            <button class="swatch" data-theme="amber" style="--sw:#3D2B1F;--swdot:#FFC46B" aria-label="琥珀" aria-pressed="false"></button>
+            <button class="swatch" data-theme="violet" style="--sw:#2B2440;--swdot:#C9B6FF" aria-label="靛紫" aria-pressed="false"></button>
+          </div>
+          <div class="cap-toast" id="capToast" role="status" aria-live="polite"></div>
+        </div>
+        <p class="stage-hint">可交互演示　·　悬停展开、点评级换词、点左下换配色</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST STRIP -->
+  <section class="strip" aria-label="数据概览">
+    <div class="wrap strip-inner">
+      <div class="stat"><span class="num">21,031</span><span class="lab">内置词条</span></div>
+      <div class="stat"><span class="num">4</span><span class="lab">套配色主题</span></div>
+      <div class="stat"><span class="num">3</span><span class="lab">档记忆评级</span></div>
+      <div class="stat"><span class="num">100%</span><span class="lab">本地数据，无需账号</span></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" class="band band-paper">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="kicker">它就是这样做事的</p>
+        <h2>三步，一个安静的学习循环。</h2>
+      </div>
+      <ol class="steps">
+        <li class="step">
+          <span class="step-no">01</span>
+          <div class="step-body">
+            <h3>悬停，展开释义</h3>
+            <p>鼠标移到胶囊上，中文义项、词形和三个按钮一起出现；移开就收起，只剩一个单词。单击胶囊可以固定，再点一次解除。</p>
+          </div>
+          <div class="step-visual v-hover" aria-hidden="true"><span class="mini-word">ephemeral</span><span class="mini-line"></span><span class="mini-line short"></span><span class="mini-btns"><i></i><i></i><i></i></span></div>
+        </li>
+        <li class="step">
+          <span class="step-no">02</span>
+          <div class="step-body">
+            <h3>点一下，给它评级</h3>
+            <p>“认识”的词当天不再出现；“模糊”排到后面第 2 位；“不认识”排到第 1 位，并自动收进“我的单词本”，之后可以专门复习。</p>
+          </div>
+          <div class="step-visual v-rate" aria-hidden="true"><span class="chip known">认识</span><span class="chip fuzzy">模糊</span><span class="chip unknown">不认识</span></div>
+        </li>
+        <li class="step">
+          <span class="step-no">03</span>
+          <div class="step-body">
+            <h3>继续，第二天自动重来</h3>
+            <p>滚轮往下是下一个词，往上是上一个词，双击直接换词。当天标记“认识”的词次日自动回到队列，学习日历里仍保留每天的三档次数。</p>
+          </div>
+          <div class="step-visual v-loop" aria-hidden="true"><span class="loop-word">今天</span><span class="loop-arrow">→</span><span class="loop-word dim">明天</span></div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="band band-dark">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="kicker">不只是一个单词框</p>
+        <h2>该有的都有，不打扰的都没有。</h2>
+      </div>
+      <div class="feature-grid">
+        <article class="feature">
+          <h3>三档评级，真的会改变队列</h3>
+          <p>不是点个赞就算。认识 / 模糊 / 不认识分别决定这个词今天还出不出现、排在第几位。</p>
+        </article>
+        <article class="feature">
+          <h3>我的单词本</h3>
+          <p>不认识的词自动收集，同一个词不会重复加入；可新建、重命名、移出，也能从任意本子开始背。</p>
+        </article>
+        <article class="feature">
+          <h3>侧边隐藏与老板键</h3>
+          <p>拖到屏幕边缘缩成一条窄条，鼠标移上去自动展开；<kbd>Alt</kbd>+<kbd>Q</kbd> 一键隐藏 / 恢复，<kbd>Alt</kbd>+<kbd>W</kbd> 让鼠标穿透到下层窗口。</p>
+        </article>
+        <article class="feature">
+          <h3>四套配色，随心情切换</h3>
+          <p>青绿、湖蓝、琥珀、靛紫。单词、星级、释义与按钮都在同一颗胶囊里，颜色一换，整颗都跟着变。</p>
+          <div class="swatch-row" aria-hidden="true">
+            <span style="--sw:#173B38;--swdot:#D6F56D"></span>
+            <span style="--sw:#163B57;--swdot:#7DD3FC"></span>
+            <span style="--sw:#3D2B1F;--swdot:#FFC46B"></span>
+            <span style="--sw:#2B2440;--swdot:#C9B6FF"></span>
+          </div>
+        </article>
+        <article class="feature">
+          <h3>释义比词库更完整</h3>
+          <p>显示当前词时，后台向有道补充更完整的中文义项和词形，最多各 4 / 5 条，结果缓存在本地；断网或失败就回退到随包词库。</p>
+        </article>
+        <article class="feature">
+          <h3>词频重要度星标</h3>
+          <p>基于 ECDICT 的 BNC / COCA 词频排名：≤3000 三星，≤10000 二星，其余一星。只作学习优先级参考，不是考试大纲评级。</p>
+        </article>
+        <article class="feature">
+          <h3>完全本地</h3>
+          <p>词库与重要度数据随包内置。安装版把配置与学习记录写到 <code>%APPDATA%\FloatingWordBall</code>，便携版写在程序所在文件夹——学习数据都不写入注册表（安装版仅写一条卸载登记），不需要账号，也不用把学习数据交给任何服务器。</p>
+        </article>
+        <article class="feature">
+          <h3>学习日历</h3>
+          <p>按月翻看每天认识 / 模糊 / 不认识的次数，哪天偷懒、哪天用功，一眼看得到。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUIDE + SCREENSHOTS -->
+  <section id="guide" class="band band-paper">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="kicker">从下载到开始背词</p>
+        <h2>装好，几分钟就能开头。</h2>
+      </div>
+
+      <div class="guide-cards">
+        <article class="guide-card">
+          <h3>安装版 <span class="tag-reco">推荐</span></h3>
+          <ol class="guide-steps">
+            <li>下载 <code>FloatingWordBall-Setup-1.0.0.exe</code>。</li>
+            <li>双击运行，按向导完成安装（不需要另装 Python）。</li>
+            <li>从开始菜单或桌面快捷方式启动。</li>
+          </ol>
+        </article>
+        <article class="guide-card">
+          <h3>便携版</h3>
+          <ol class="guide-steps">
+            <li>下载 <code>FloatingWordBall-Portable-1.0.0.zip</code>。</li>
+            <li>解压到任意文件夹，例如 <code>D:\Apps\FloatingWordBall</code>。</li>
+            <li>双击 <code>FloatingWordBall.exe</code> 启动，卸载时直接删掉文件夹即可。</li>
+          </ol>
+        </article>
+        <article class="guide-card">
+          <h3>首次使用</h3>
+          <ol class="guide-steps">
+            <li>右键托盘图标 → 单词本…，选择词库（CET4 / CET6 / 考研 / TOEFL）和起点。</li>
+            <li>设置每天循环的单词个数（1–1000）。</li>
+            <li>鼠标移到胶囊上就能开始，点评级换下一个。</li>
+          </ol>
+        </article>
+      </div>
+      <p class="req">系统要求：Windows 10 / 11；安装版与便携版都自带运行环境，无需另装 Python。</p>
+
+      <div class="shots" id="shots">
+          <figure class="shot">
+            <div class="shot-frame" data-fallback="主界面 · 悬浮胶囊">
+              <img src="assets/screenshots/shot-1.png" alt="FloatingWordBall 悬浮胶囊展开主界面（青绿主题）" loading="lazy" onerror="this.closest('.shot-frame').classList.add('is-empty')">
+            </div>
+            <figcaption>展开即见释义，认识 / 模糊 / 不认识，一点就换</figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot-frame" data-fallback="收起态 · 湖蓝主题">
+              <img src="assets/screenshots/shot-2.png" alt="收起状态的悬浮胶囊（湖蓝主题）" loading="lazy" onerror="this.closest('.shot-frame').classList.add('is-empty')">
+            </div>
+            <figcaption>收起时只留单词；四套配色随手切换</figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot-frame" data-fallback="单词本 · 计划设置">
+              <img src="assets/screenshots/shot-3.png" alt="单词本对话框：选择词库与每天循环个数" loading="lazy" onerror="this.closest('.shot-frame').classList.add('is-empty')">
+            </div>
+            <figcaption>按顺序背：选词库、设起点与每天循环个数</figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot-frame" data-fallback="我的单词本">
+              <img src="assets/screenshots/shot-4.png" alt="我的单词本对话框：自动收集不认识的单词" loading="lazy" onerror="this.closest('.shot-frame').classList.add('is-empty')">
+            </div>
+            <figcaption>我的单词本：不认识的词自动收进来</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHORTCUTS -->
+  <section id="shortcuts" class="band band-dark">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="kicker">手不离键盘</p>
+        <h2>常用快捷键。</h2>
+      </div>
+      <div class="keys">
+        <div class="key-row"><span class="keys-combo"><kbd>Alt</kbd>+<kbd>Q</kbd></span><span class="keys-desc">老板键：隐藏 / 恢复胶囊</span></div>
+        <div class="key-row"><span class="keys-combo"><kbd>Alt</kbd>+<kbd>W</kbd></span><span class="keys-desc">鼠标穿透开关（本次运行有效）</span></div>
+        <div class="key-row"><span class="keys-combo"><kbd>Esc</kbd></span><span class="keys-desc">依次关闭穿透 → 取消固定 → 收起</span></div>
+        <div class="key-row"><span class="keys-combo"><kbd>滚轮</kbd></span><span class="keys-desc">向下下一个词，向上上一个词</span></div>
+        <div class="key-row"><span class="keys-combo"><kbd>双击</kbd></span><span class="keys-desc">双击单词区域立即换词</span></div>
+        <div class="key-row"><span class="keys-combo"><kbd>拖动边缘</kbd></span><span class="keys-desc">调整胶囊大小（唯一改尺寸的方式）</span></div>
+        <div class="key-row"><span class="keys-combo"><kbd>拖动胶囊</kbd></span><span class="keys-desc">移动位置，松手自动记忆</span></div>
+        <div class="key-row"><span class="keys-combo"><kbd>拖到屏幕边</kbd></span><span class="keys-desc">进入侧边隐藏，只剩一条窄条</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="band band-paper">
+    <div class="wrap narrow">
+      <div class="section-head">
+        <p class="kicker">你可能想先知道</p>
+        <h2>常见问题。</h2>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>安装版和便携版有什么区别？</summary>
+          <p>安装版会走安装向导，自动建立开始菜单和桌面快捷方式，适合长期使用；便携版解压即用、不写系统和注册表，适合放 U 盘或不想安装的场景。两者功能完全一致。</p>
+        </details>
+        <details>
+          <summary>需要另外安装 Python 吗？</summary>
+          <p>不需要。安装版和便携版都打包了运行环境，双击即可运行。</p>
+        </details>
+        <details>
+          <summary>点了“鼠标穿透”改不回去怎么办？</summary>
+          <p>双击托盘图标，或右键托盘图标 →“关闭鼠标穿透”，也可以按 <kbd>Alt</kbd>+<kbd>W</kbd> 或 <kbd>Esc</kbd>。穿透只在本次运行有效，重启后会自动关闭。</p>
+        </details>
+        <details>
+          <summary>Alt+Q / Alt+W 没反应？</summary>
+          <p>通常是被其他软件占用了全局快捷键。打开托盘右键菜单，用“隐藏 / 显示”“关闭鼠标穿透”完成同样操作，或先释放冲突的快捷键。</p>
+        </details>
+        <details>
+          <summary>释义为什么会比词库多？会联网吗？</summary>
+          <p>显示当前词时，程序会向有道词典补充更完整的中文义项和词形，并缓存在本地。没有网络或请求失败时，会回退到随包的本地词库，不影响使用。词库和重要度数据本身都在本地。</p>
+        </details>
+        <details>
+          <summary>单词今天怎么不见了？</summary>
+          <p>它已被标记为“认识”，当天不再出现，明天会自动回到循环；学习日历里仍能看到今天的记录。想让它立刻回来，右键托盘 →“恢复今日已认识的单词”。</p>
+        </details>
+        <details>
+          <summary>会收集我的数据吗？</summary>
+          <p>不会上传。单词本、学习计划、评级记录都保存在本机：安装版在 <code>%APPDATA%\FloatingWordBall</code>，便携版在程序所在文件夹；学习数据不写入注册表，安装版仅写一条卸载登记，也不需要账号。旧版放在程序目录里的数据会在首次启动时自动迁移过来。</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHANGELOG -->
+  <section id="changelog" class="band band-paper band-tight">
+    <div class="wrap narrow">
+      <div class="section-head">
+        <p class="kicker">版本记录</p>
+        <h2>一直在慢慢变好。</h2>
+      </div>
+      <ol class="timeline">
+        <li>
+          <div class="tl-meta"><span class="tl-ver">v1.0.0</span><span class="tl-date">当前版本</span></div>
+          <div class="tl-body">
+            <p>首个正式发布：Windows 安装版与便携版；内置 ECDICT（MIT）四套词库与词频重要度；四套配色、三档评级、我的单词本、学习日历、侧边隐藏与全局快捷键，离线可用。</p>
+          </div>
+        </li>
+        <li>
+          <div class="tl-meta"><span class="tl-ver">v0.1.0</span><span class="tl-date">基线</span></div>
+          <div class="tl-body">
+            <p>原始版公开基线：源码与数据完成安全备份并公开，作为后续发布的起点。</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section id="download" class="band band-download">
+    <div class="wrap">
+      <div class="dl-head">
+        <h2>把它放到你的桌面。</h2>
+        <p class="dl-sub">选择安装版或便携版，Windows 10 / 11 都能用。无需另装 Python。</p>
+      </div>
+      <div class="dl-grid">
+        <a class="dl-card dl-primary" href="https://github.com/Linus-Leo/words-at-any-time/releases/download/v1.0.0/FloatingWordBall-Setup-1.0.0.exe" rel="noopener">
+          <span class="dl-badge">推荐</span>
+          <span class="dl-name">安装版</span>
+          <span class="dl-file">FloatingWordBall-Setup-1.0.0.exe</span>
+          <span class="dl-desc">按向导安装，自动创建开始菜单与桌面快捷方式；数据存在 <code>%APPDATA%\FloatingWordBall</code>。</span>
+          <span class="dl-action">下载安装版
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 15.5h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+        <a class="dl-card" href="https://github.com/Linus-Leo/words-at-any-time/releases/download/v1.0.0/FloatingWordBall-Portable-1.0.0.zip" rel="noopener">
+          <span class="dl-name">便携版</span>
+          <span class="dl-file">FloatingWordBall-Portable-1.0.0.zip</span>
+          <span class="dl-desc">解压即用，数据就留在解压目录，不写系统和注册表，适合放 U 盘。</span>
+          <span class="dl-action">下载便携版
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 15.5h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </a>
+      </div>
+      <div class="dl-foot">
+        <p>版本 v1.0.0　·　Windows 10 / 11　·　词库来自 ECDICT（MIT）</p>
+        <a class="dl-all" href="https://github.com/Linus-Leo/words-at-any-time/releases" target="_blank" rel="noopener">查看所有版本与校验值 →</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div class="foot-brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>FloatingWordBall<span class="brand-cn">单词悬浮球</span></span>
+    </div>
+    <p class="foot-line">一个安静、常驻桌面的悬浮背单词工具。</p>
+    <nav class="foot-links" aria-label="页脚链接">
+      <a href="https://github.com/Linus-Leo/words-at-any-time" target="_blank" rel="noopener">GitHub 仓库</a>
+      <a href="https://github.com/Linus-Leo/words-at-any-time/releases" target="_blank" rel="noopener">版本发布</a>
+      <a href="https://github.com/Linus-Leo/words-at-any-time/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">第三方许可</a>
+      <a href="https://github.com/Linus-Leo/words-at-any-time/issues" target="_blank" rel="noopener">问题反馈</a>
+    </nav>
+    <p class="foot-fine">内置词库与词频数据来自 <a href="https://github.com/skywind3000/ECDICT" target="_blank" rel="noopener">ECDICT</a>（MIT，Copyright © 2025 Linwei）。学习数据仅保存在本机。</p>
+  </div>
+</footer>
+
+<script src="assets/js/main.js" defer></script>
+</body>
+</html>
