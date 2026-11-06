@@ -1,0 +1,40 @@
+# --- 个人学习数据：只保留在本机，绝不提交 ---
+config.json
+wordbooks.json
+details_cache.json
+
+# 用户快捷方式与本机启动器
+*.lnk
+
+# 本地备份
+.baseline-backup/
+
+# Python 缓存与虚拟环境
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+*.log
+
+# 构建产物
+build/
+dist/
+*.egg-info/
+*.spec
+
+# 测试与静态检查缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 本地临时目录
+.tmp-auth/
+.tools/
+
+# Windows 杂项
+Thumbs.db
+desktop.ini
+*.bak
+*.tmp
